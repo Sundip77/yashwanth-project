@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Healthcare theme - calming medical blues and teals */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Medical blue primary */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 91% 70%;
+
+    /* Healthcare teal secondary */
+    --secondary: 186 100% 94%;
+    --secondary-foreground: 186 100% 20%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 15% 50%;
+
+    /* Trust teal accent */
+    --accent: 186 80% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Emergency red */
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --emergency: 0 85% 95%;
+    --emergency-foreground: 0 85% 40%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 95%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar - medical professional */
+    --sidebar-background: 217 25% 96%;
+    --sidebar-foreground: 215 25% 25%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 92%;
+    --sidebar-accent-foreground: 215 25% 25%;
+    --sidebar-border: 214 20% 88%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%), hsl(186 80% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 20% 96%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(217 91% 60% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(217 91% 60% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(217 91% 60% / 0.15);
+    --shadow-glow: 0 0 30px hsl(217 91% 70% / 0.3);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    /* Dark mode - professional medical dark theme */
+    --background: 215 30% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 215 28% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    /* Brighter primary for dark mode */
+    --primary: 217 91% 65%;
+    --primary-foreground: 215 30% 8%;
+    --primary-glow: 217 91% 75%;
+
+    --secondary: 186 100% 12%;
+    --secondary-foreground: 186 80% 85%;
+
+    --muted: 215 28% 15%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 186 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 85% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --emergency: 0 85% 15%;
+    --emergency-foreground: 0 85% 70%;
+
+    --border: 215 25% 18%;
+    --input: 215 28% 15%;
+    --ring: 217 91% 65%;
+
+    /* Dark sidebar */
+    --sidebar-background: 215 30% 10%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 215 30% 8%;
+    --sidebar-accent: 215 28% 15%;
+    --sidebar-accent-foreground: 210 20% 85%;
+    --sidebar-border: 215 25% 18%;
+    --sidebar-ring: 217 91% 65%;
+
+    /* Dark gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 65%), hsl(217 91% 75%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 65%), hsl(186 80% 50%));
+    --gradient-subtle: linear-gradient(180deg, hsl(215 30% 8%), hsl(215 28% 12%));
+
+    /* Dark shadows with glow */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 40px hsl(217 91% 65% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
