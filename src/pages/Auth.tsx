@@ -79,6 +79,10 @@ export default function Auth() {
     }
 
     setLoading(true);
+    
+    // Log the Supabase URL for debugging
+    console.log("Attempting signup with Supabase URL:", supabaseUrl);
+    
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -113,10 +117,25 @@ export default function Auth() {
       }
     } catch (error: any) {
       console.error("Signup exception:", error);
-      const errorMessage = error?.message || "An unexpected error occurred";
+      console.error("Supabase URL being used:", supabaseUrl);
       
-      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
-        toast.error("Cannot connect to Supabase. Please verify:\n1. VITE_SUPABASE_URL in .env.local\n2. Your internet connection\n3. Restart the dev server after adding .env.local");
+      const errorMessage = error?.message || "An unexpected error occurred";
+      const isNetworkError = 
+        error instanceof TypeError ||
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("NetworkError") ||
+        errorMessage.includes("ERR_NAME_NOT_RESOLVED");
+      
+      if (isNetworkError) {
+        toast.error(
+          `Cannot connect to Supabase at ${supabaseUrl}\n\n` +
+          `ERR_NAME_NOT_RESOLVED means DNS cannot resolve the hostname.\n` +
+          `This usually means:\n` +
+          `1. The Supabase project doesn't exist or was deleted\n` +
+          `2. The project is paused (check Supabase dashboard)\n` +
+          `3. The URL is incorrect - verify at https://app.supabase.com\n\n` +
+          `Please check your .env.local file and restart the dev server.`
+        );
       } else {
         toast.error(errorMessage);
       }
@@ -144,6 +163,10 @@ export default function Auth() {
     }
 
     setLoading(true);
+    
+    // Log the Supabase URL for debugging
+    console.log("Attempting signin with Supabase URL:", supabaseUrl);
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -170,10 +193,25 @@ export default function Auth() {
       }
     } catch (error: any) {
       console.error("Sign in exception:", error);
-      const errorMessage = error?.message || "An unexpected error occurred";
+      console.error("Supabase URL being used:", supabaseUrl);
       
-      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
-        toast.error("Cannot connect to Supabase. Please verify:\n1. VITE_SUPABASE_URL in .env.local\n2. Your internet connection\n3. Restart the dev server after adding .env.local");
+      const errorMessage = error?.message || "An unexpected error occurred";
+      const isNetworkError = 
+        error instanceof TypeError ||
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("NetworkError") ||
+        errorMessage.includes("ERR_NAME_NOT_RESOLVED");
+      
+      if (isNetworkError) {
+        toast.error(
+          `Cannot connect to Supabase at ${supabaseUrl}\n\n` +
+          `ERR_NAME_NOT_RESOLVED means DNS cannot resolve the hostname.\n` +
+          `This usually means:\n` +
+          `1. The Supabase project doesn't exist or was deleted\n` +
+          `2. The project is paused (check Supabase dashboard)\n` +
+          `3. The URL is incorrect - verify at https://app.supabase.com\n\n` +
+          `Please check your .env.local file and restart the dev server.`
+        );
       } else {
         toast.error(errorMessage);
       }

@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { VoiceMode } from "@/components/chat/VoiceMode";
 import { EmergencyAlert } from "@/components/chat/EmergencyAlert";
 import { DisclaimerBanner } from "@/components/chat/DisclaimerBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,20 @@ export default function Chat() {
   const [isEmergency, setIsEmergency] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [initialSuggestions, setInitialSuggestions] = useState<string[]>([]);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [voiceResponse, setVoiceResponse] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Clear voice response when voice mode is disabled
+  useEffect(() => {
+    if (!isVoiceMode) {
+      setVoiceResponse(null);
+    }
+  }, [isVoiceMode]);
+
+  // Don't auto-clear voice response - let VoiceMode component handle it
+  // The response will be cleared after speaking completes
 
   useEffect(() => {
     if (id) {
@@ -240,6 +254,11 @@ export default function Chat() {
         };
         setMessages(prev => [...prev, emergencyMessage]);
         await saveMessage("assistant", data.message, convId);
+        
+        // Set voice response for voice mode
+        if (isVoiceMode) {
+          setVoiceResponse(data.message);
+        }
         return;
       }
 
@@ -253,6 +272,11 @@ export default function Chat() {
       setMessages(prev => [...prev, assistantMessage]);
       await saveMessage("assistant", data.message, convId);
 
+      // Set voice response for voice mode
+      if (isVoiceMode) {
+        setVoiceResponse(data.message);
+      }
+
       // Set suggestions
       if (data.suggestions) {
         setSuggestions(data.suggestions);
@@ -261,9 +285,24 @@ export default function Chat() {
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
+      
+      // Set error response for voice mode
+      if (isVoiceMode) {
+        setVoiceResponse("Sorry, I encountered an error. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVoiceTranscript = async (text: string) => {
+    if (!text.trim()) return;
+    setIsListening(false);
+    await sendMessage(text);
+  };
+
+  const handleVoiceStop = () => {
+    setIsListening(false);
   };
 
   return (
@@ -272,29 +311,58 @@ export default function Chat() {
         <ChatHeader />
         
         {isEmergency && <EmergencyAlert />}
-        <DisclaimerBanner />
+        {!isVoiceMode && <DisclaimerBanner />}
 
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <MessageList 
-              messages={messages} 
-              loading={loading} 
-              suggestions={initialSuggestions}
-              onSuggestionClick={handleSuggestionClick}
+        {isVoiceMode ? (
+          // Voice Mode UI
+          <div className="flex-1 overflow-hidden">
+            <VoiceMode
+              onTranscript={handleVoiceTranscript}
+              onStop={handleVoiceStop}
+              onListeningChange={setIsListening}
+              onExitVoiceMode={() => {
+                setIsVoiceMode(false);
+                setVoiceResponse(null);
+                // Stop any ongoing speech
+                if (window.speechSynthesis) {
+                  window.speechSynthesis.cancel();
+                }
+              }}
+              response={voiceResponse}
+              isProcessing={loading}
             />
-            <div ref={messagesEndRef} />
           </div>
-        </div>
+        ) : (
+          // Normal Chat UI
+          <>
+            <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <MessageList 
+                  messages={messages} 
+                  loading={loading} 
+                  suggestions={initialSuggestions}
+                  onSuggestionClick={handleSuggestionClick}
+                />
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
 
-        <div className="border-t border-border bg-card">
-          <div className="max-w-4xl mx-auto px-4 md:px-8 py-4">
-            <ChatInput 
-              onSend={sendMessage} 
-              disabled={loading}
-              suggestions={suggestions}
-            />
-          </div>
-        </div>
+            <div className="border-t border-border bg-card">
+              <div className="max-w-4xl mx-auto px-4 md:px-8 py-4">
+                <ChatInput 
+                  onSend={sendMessage} 
+                  disabled={loading}
+                  suggestions={suggestions}
+                  isVoiceMode={isVoiceMode}
+                  onVoiceModeToggle={() => {
+                    setIsVoiceMode(!isVoiceMode);
+                    setVoiceResponse(null);
+                  }}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </AppLayout>
   );

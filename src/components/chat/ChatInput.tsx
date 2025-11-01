@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Send } from "lucide-react";
+import { Send, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -8,9 +8,17 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   suggestions?: string[];
+  isVoiceMode?: boolean;
+  onVoiceModeToggle?: () => void;
 }
 
-export function ChatInput({ onSend, disabled, suggestions = [] }: ChatInputProps) {
+export function ChatInput({ 
+  onSend, 
+  disabled, 
+  suggestions = [],
+  isVoiceMode = false,
+  onVoiceModeToggle
+}: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -64,6 +72,25 @@ export function ChatInput({ onSend, disabled, suggestions = [] }: ChatInputProps
 
       {/* Input */}
       <div className="flex gap-2 items-end">
+        {/* Voice Mode Toggle */}
+        <Button
+          variant={isVoiceMode ? "default" : "outline"}
+          size="icon"
+          onClick={onVoiceModeToggle || (() => {})}
+          disabled={!onVoiceModeToggle}
+          className={cn(
+            "h-[60px] w-[60px] rounded-full transition-all",
+            isVoiceMode && "bg-primary text-primary-foreground"
+          )}
+          title={isVoiceMode ? "Exit voice mode" : "Enter voice mode"}
+        >
+          {isVoiceMode ? (
+            <MicOff className="h-5 w-5" />
+          ) : (
+            <Mic className="h-5 w-5" />
+          )}
+        </Button>
+
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -71,15 +98,18 @@ export function ChatInput({ onSend, disabled, suggestions = [] }: ChatInputProps
             onChange={handleInput}
             onKeyPress={handleKeyPress}
             placeholder="Type your health question here..."
-            disabled={disabled}
-            className="min-h-[60px] max-h-[200px] resize-none"
+            disabled={disabled || isVoiceMode}
+            className={cn(
+              "min-h-[60px] max-h-[200px] resize-none",
+              isVoiceMode && "opacity-50 cursor-not-allowed"
+            )}
             rows={1}
           />
         </div>
 
         <Button
           onClick={handleSend}
-          disabled={disabled || !message.trim()}
+          disabled={disabled || !message.trim() || isVoiceMode}
           size="icon"
           className="h-[60px] w-[60px] rounded-full shadow-lg"
         >

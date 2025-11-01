@@ -21,26 +21,26 @@ export function ChatHeader() {
         </div>
 
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Info className="h-5 w-5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-2">
-              <h3 className="font-semibold">About MediShield AI</h3>
-              <p className="text-sm text-muted-foreground">
-                This AI assistant provides health information for educational purposes. 
-                Always consult healthcare professionals for medical decisions.
-              </p>
-              <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Emergency:</strong> Call 911 (US), 108 (India), or your local emergency number
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Info className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-2">
+                <h3 className="font-semibold">About MediShield AI</h3>
+                <p className="text-sm text-muted-foreground">
+                  This AI assistant provides health information for educational purposes. 
+                  Always consult healthcare professionals for medical decisions.
                 </p>
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Emergency:</strong> Call 911 (US), 108 (India), or your local emergency number
+                  </p>
+                </div>
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
       </div>
     </header>
   );
