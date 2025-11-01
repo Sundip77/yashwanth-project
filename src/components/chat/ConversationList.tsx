@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MessageCircle, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,9 @@ interface ConversationListProps {
 export function ConversationList({ collapsed }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchConversations();
@@ -77,20 +79,48 @@ export function ConversationList({ collapsed }: ConversationListProps) {
   };
 
   const deleteConversation = async (id: string) => {
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete conversation');
-    } else {
-      toast.success('Conversation deleted');
-      // Remove from local state immediately
+    setDeletingId(id);
+    
+    try {
+      // Optimistically remove from UI
       setConversations(prev => prev.filter(conv => conv.id !== id));
-      // Also refresh from server
+      
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Delete error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        // Restore the conversation on error
+        fetchConversations();
+        toast.error(`Failed to delete conversation: ${error.message || 'Unknown error'}`);
+      } else {
+        toast.success('Conversation deleted');
+        
+        // If we're currently viewing this conversation, navigate away
+        const currentPath = location.pathname;
+        if (currentPath === `/chat/${id}`) {
+          navigate('/');
+        }
+        
+        // Refresh the list to ensure consistency
+        fetchConversations();
+      }
+    } catch (error: any) {
+      console.error('Delete exception:', error);
+      // Restore the conversation on error
       fetchConversations();
+      toast.error(`Failed to delete conversation: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -136,7 +166,8 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-opacity"
+                    className="h-7 w-7 shrink-0 opacity-100 hover:bg-destructive/10"
+                    disabled={deletingId === conv.id}
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -157,18 +188,16 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-                      Cancel
-                    </AlertDialogCancel>
+                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={(e) => {
                         e.stopPropagation();
-                        e.preventDefault();
                         deleteConversation(conv.id);
                       }}
+                      disabled={deletingId === conv.id}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Delete
+                      {deletingId === conv.id ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
