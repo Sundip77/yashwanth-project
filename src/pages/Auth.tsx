@@ -65,11 +65,24 @@ export default function Auth() {
     
     if (!validateInputs()) return;
 
+    // Check if Supabase is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      toast.error("Supabase configuration missing! Please check your .env.local file.");
+      console.error("Missing environment variables:", {
+        url: supabaseUrl ? "✓" : "✗",
+        key: supabaseKey ? "✓" : "✗"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -78,17 +91,35 @@ export default function Auth() {
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
+        console.error("Signup error details:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
+        if (error.message.includes("already registered") || error.message.includes("already been registered")) {
           toast.error("This email is already registered. Please sign in instead.");
+        } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          toast.error("Network error! Please check:\n1. Your internet connection\n2. Supabase URL is correct\n3. No firewall blocking requests");
         } else {
-          toast.error(error.message);
+          toast.error(error.message || "Failed to create account. Please try again.");
         }
       } else {
-        toast.success("Account created! You can now sign in.");
+        if (data.user) {
+          toast.success("Account created! You can now sign in.");
+        } else {
+          toast.success("Check your email to confirm your account!");
+        }
       }
-    } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("An unexpected error occurred");
+    } catch (error: any) {
+      console.error("Signup exception:", error);
+      const errorMessage = error?.message || "An unexpected error occurred";
+      
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+        toast.error("Cannot connect to Supabase. Please verify:\n1. VITE_SUPABASE_URL in .env.local\n2. Your internet connection\n3. Restart the dev server after adding .env.local");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -99,25 +130,53 @@ export default function Auth() {
     
     if (!validateInputs()) return;
 
+    // Check if Supabase is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      toast.error("Supabase configuration missing! Please check your .env.local file.");
+      console.error("Missing environment variables:", {
+        url: supabaseUrl ? "✓" : "✗",
+        key: supabaseKey ? "✓" : "✗"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+        console.error("Sign in error details:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
+        if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid credentials")) {
           toast.error("Invalid email or password");
+        } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          toast.error("Network error! Please check:\n1. Your internet connection\n2. Supabase URL is correct\n3. No firewall blocking requests");
         } else {
-          toast.error(error.message);
+          toast.error(error.message || "Failed to sign in. Please try again.");
         }
       } else {
         toast.success("Signed in successfully!");
+        // Navigation will happen via useEffect onAuthStateChange
       }
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast.error("An unexpected error occurred");
+    } catch (error: any) {
+      console.error("Sign in exception:", error);
+      const errorMessage = error?.message || "An unexpected error occurred";
+      
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+        toast.error("Cannot connect to Supabase. Please verify:\n1. VITE_SUPABASE_URL in .env.local\n2. Your internet connection\n3. Restart the dev server after adding .env.local");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
