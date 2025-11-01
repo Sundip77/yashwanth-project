@@ -193,14 +193,14 @@ export function MemoryManager() {
                       key={memory.id}
                       className="p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0 overflow-hidden">
                           {memory.category && (
-                            <Badge variant="outline" className="mb-2 text-xs">
+                            <Badge variant="outline" className="mb-2 text-xs shrink-0">
                               {memory.category}
                             </Badge>
                           )}
-                          <p className="text-sm">{memory.content}</p>
+                          <p className="text-sm break-words">{memory.content}</p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(memory.created_at).toLocaleDateString()}
                           </p>
@@ -208,8 +208,12 @@ export function MemoryManager() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => openDeleteDialog(memory.id)}
+                          className="h-8 w-8 shrink-0 opacity-100 hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(memory.id);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

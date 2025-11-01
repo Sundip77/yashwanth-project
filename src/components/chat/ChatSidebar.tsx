@@ -1,5 +1,4 @@
-import { Plus, History, Settings, LogOut, Moon, Sun, Languages, Activity, ChevronLeft, ChevronRight, Brain } from "lucide-react";
-import { useState } from "react";
+import { Plus, History, LogOut, Moon, Sun, Languages, Activity, Brain, PanelLeft } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,8 +11,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { SidebarResizeHandle } from "@/components/ui/sidebar-resize-handle";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "next-themes";
@@ -23,12 +24,14 @@ import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
 import { LanguageSelector } from "./LanguageSelector";
 import { MemoryManager } from "./MemoryManager";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export function ChatSidebar() {
-  const { open, setOpen } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
+  const isCollapsed = state === "collapsed";
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -44,75 +47,111 @@ export function ChatSidebar() {
     navigate("/");
   };
 
-  const handleToggleSidebar = () => {
-    setOpen(!open);
-  };
-
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center justify-between">
-          <div 
-            className="flex items-center gap-2 cursor-pointer transition-all duration-200"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={handleToggleSidebar}
-          >
-            {isHovered ? (
-              open ? (
-                <ChevronLeft className="h-6 w-6 text-primary" />
-              ) : (
-                <ChevronRight className="h-6 w-6 text-primary" />
-              )
-            ) : (
-              <Activity className="h-6 w-6 text-primary" />
-            )}
-            {open && (
-              <div>
-                <h1 className="text-lg font-bold text-sidebar-foreground">MediShield</h1>
-                <p className="text-xs text-muted-foreground">AI Health Assistant</p>
-              </div>
-            )}
-          </div>
-          {open && <SidebarTrigger className="ml-auto" />}
+      <SidebarRail />
+      <SidebarResizeHandle />
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={toggleSidebar}
+                >
+                  <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary/10 shrink-0">
+                    <Activity className="h-5 w-5 text-primary" />
+                  </div>
+                  {!isCollapsed && (
+                    <div className="min-w-0">
+                      <h1 className="text-lg font-bold text-sidebar-foreground truncate">MediShield</h1>
+                      <p className="text-xs text-muted-foreground truncate">AI Health Assistant</p>
+                    </div>
+                  )}
+                </div>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right">
+                  <p>MediShield - Click to expand</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                  }}
+                >
+                  <PanelLeft className="h-4 w-4" />
+                  <span className="sr-only">Toggle Sidebar</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{isCollapsed ? "Expand" : "Collapse"} Sidebar</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="flex flex-col gap-2">
         {/* New Chat Button */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild onClick={handleNewChat}>
-                  <Button variant="default" className="w-full justify-start gap-2">
-                    <Plus className="h-4 w-4" />
-                    {open && <span>New Chat</span>}
-                  </Button>
-                </SidebarMenuButton>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton 
+                        onClick={handleNewChat}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        tooltip={isCollapsed ? "New Chat" : undefined}
+                      >
+                        <Plus className="h-4 w-4 shrink-0" />
+                        <span className={cn(isCollapsed && "sr-only")}>New Chat</span>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    {isCollapsed && (
+                      <TooltipContent side="right">
+                        <p>New Chat</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Conversation History */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2">
-            <History className="h-4 w-4" />
-            {open && <span>Recent Chats</span>}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <ScrollArea className="h-[calc(100vh-400px)]">
-              <ConversationList collapsed={!open} />
+        <SidebarGroup className="flex-1 min-h-0">
+          {!isCollapsed && (
+            <SidebarGroupLabel className="flex items-center gap-2 px-2">
+              <History className="h-4 w-4 shrink-0" />
+              <span>Recent Chats</span>
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent className="flex-1 min-h-0">
+            <ScrollArea className="h-full">
+              <ConversationList collapsed={isCollapsed} />
             </ScrollArea>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Language Selector */}
-        {open && (
+        {!isCollapsed && (
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-              <Languages className="h-4 w-4" />
+            <SidebarGroupLabel className="flex items-center gap-2 px-2">
+              <Languages className="h-4 w-4 shrink-0" />
               <span>Language</span>
             </SidebarGroupLabel>
             <SidebarGroupContent className="px-2">
@@ -122,14 +161,43 @@ export function ChatSidebar() {
         )}
 
         {/* Memory Manager */}
-        {open && (
+        {!isCollapsed && (
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
+            <SidebarGroupLabel className="flex items-center gap-2 px-2">
+              <Brain className="h-4 w-4 shrink-0" />
               <span>Memories</span>
             </SidebarGroupLabel>
             <SidebarGroupContent className="px-2">
               <MemoryManager />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Collapsed Icons */}
+        {isCollapsed && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton asChild>
+                          <Button variant="ghost" size="icon" className="w-full">
+                            <Languages className="h-4 w-4" />
+                          </Button>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>Language</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <MemoryManager />
+                </SidebarMenuItem>
+              </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -139,36 +207,51 @@ export function ChatSidebar() {
         <SidebarMenu>
           {/* Theme Toggle */}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton 
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    tooltip={isCollapsed ? "Toggle Theme" : undefined}
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Moon className="h-4 w-4 shrink-0" />
+                    )}
+                    <span className={cn(isCollapsed && "sr-only")}>Toggle Theme</span>
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                {isCollapsed && (
+                  <TooltipContent side="right">
+                    <p>Toggle Theme</p>
+                  </TooltipContent>
                 )}
-                {open && <span>Toggle Theme</span>}
-              </Button>
-            </SidebarMenuButton>
+              </Tooltip>
+            </TooltipProvider>
           </SidebarMenuItem>
 
           {/* Sign Out */}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4" />
-                {open && <span>Sign Out</span>}
-              </Button>
-            </SidebarMenuButton>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton 
+                    onClick={handleSignOut}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    tooltip={isCollapsed ? "Sign Out" : undefined}
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    <span className={cn(isCollapsed && "sr-only")}>Sign Out</span>
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                {isCollapsed && (
+                  <TooltipContent side="right">
+                    <p>Sign Out</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
