@@ -13,7 +13,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 interface Conversation {
@@ -31,6 +30,8 @@ export function ConversationList({ collapsed }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -78,8 +79,17 @@ export function ConversationList({ collapsed }: ConversationListProps) {
     setLoading(false);
   };
 
-  const deleteConversation = async (id: string) => {
+  const openDeleteDialog = (id: string) => {
+    setConversationToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteConversation = async () => {
+    if (!conversationToDelete) return;
+    
+    const id = conversationToDelete;
     setDeletingId(id);
+    setDeleteDialogOpen(false);
     
     try {
       // Optimistically remove from UI
@@ -121,6 +131,7 @@ export function ConversationList({ collapsed }: ConversationListProps) {
       toast.error(`Failed to delete conversation: ${error?.message || 'Unknown error'}`);
     } finally {
       setDeletingId(null);
+      setConversationToDelete(null);
     }
   };
 
@@ -161,51 +172,45 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                   {new Date(conv.updated_at).toLocaleDateString()}
                 </p>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 opacity-100 hover:bg-destructive/10"
-                    disabled={deletingId === conv.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive shrink-0" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure? This will permanently delete this conversation and all its messages.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(conv.id);
-                      }}
-                      disabled={deletingId === conv.id}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      {deletingId === conv.id ? 'Deleting...' : 'Delete'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 opacity-100 hover:bg-destructive/10"
+                disabled={deletingId === conv.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDeleteDialog(conv.id);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <Trash2 className="h-4 w-4 text-destructive shrink-0" />
+              </Button>
             </>
           )}
         </div>
       ))}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This will permanently delete this conversation and all its messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConversationToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteConversation}
+              disabled={!!deletingId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingId ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
