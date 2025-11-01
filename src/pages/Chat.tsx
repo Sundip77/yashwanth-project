@@ -10,6 +10,7 @@ import { DisclaimerBanner } from "@/components/chat/DisclaimerBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
+import { extractMemory } from "@/lib/memoryExtractor";
 
 interface Message {
   id: string;
@@ -230,6 +231,17 @@ export default function Chat() {
       // Save user message to DB
       await saveMessage("user", content, convId);
 
+      // Load user memories for context
+      const { data: { user } } = await supabase.auth.getUser();
+      let memories: string[] = [];
+      if (user) {
+        const { data: memoriesData } = await supabase
+          .from('memories' as any)
+          .select('content')
+          .eq('user_id', user.id);
+        memories = (memoriesData || []).map((m: any) => m.content);
+      }
+
       // Call AI function
       const { data, error } = await supabase.functions.invoke('health-chat', {
         body: {
@@ -237,7 +249,8 @@ export default function Chat() {
             role: m.role,
             content: m.content
           })),
-          language
+          language,
+          memories
         }
       });
 
@@ -277,6 +290,9 @@ export default function Chat() {
         setVoiceResponse(data.message);
       }
 
+      // Extract and save important memories
+      await extractAndSaveMemory([...messages, userMessage, assistantMessage]);
+
       // Set suggestions
       if (data.suggestions) {
         setSuggestions(data.suggestions);
@@ -303,6 +319,47 @@ export default function Chat() {
 
   const handleVoiceStop = () => {
     setIsListening(false);
+  };
+
+  const extractAndSaveMemory = async (allMessages: Message[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get existing memories to avoid duplicates
+      const { data: existingMemories } = await supabase
+        .from('memories' as any)
+        .select('content')
+        .eq('user_id', user.id);
+
+      const existingMemoryTexts = (existingMemories || []).map(m => m.content);
+
+      // Extract memory from conversation
+      const memoryData = await extractMemory(
+        allMessages.map(m => ({ role: m.role, content: m.content })),
+        existingMemoryTexts
+      );
+
+      if (memoryData && memoryData.shouldSave && memoryData.memory) {
+        // Save the memory
+        const { error } = await supabase
+          .from('memories' as any)
+          .insert({
+            user_id: user.id,
+            content: memoryData.memory,
+            category: memoryData.category || null
+          });
+
+        if (!error) {
+          console.log('Memory saved:', memoryData.memory);
+          // Optionally show a subtle toast
+          toast.success('Important information saved to memories', { duration: 2000 });
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting/saving memory:', error);
+      // Don't show error to user - memory extraction is non-critical
+    }
   };
 
   return (

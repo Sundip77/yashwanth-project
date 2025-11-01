@@ -1,4 +1,4 @@
-import { Plus, History, Settings, LogOut, Moon, Sun, Languages, Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, History, Settings, LogOut, Moon, Sun, Languages, Activity, ChevronLeft, ChevronRight, Brain } from "lucide-react";
 import { useState } from "react";
 import {
   Sidebar,
@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
 import { LanguageSelector } from "./LanguageSelector";
+import { MemoryManager } from "./MemoryManager";
 
 export function ChatSidebar() {
   const { open, setOpen } = useSidebar();
@@ -116,6 +117,19 @@ export function ChatSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent className="px-2">
               <LanguageSelector />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Memory Manager */}
+        {open && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              <span>Memories</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="px-2">
+              <MemoryManager />
             </SidebarGroupContent>
           </SidebarGroup>
         )}

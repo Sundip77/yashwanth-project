@@ -43,7 +43,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, language = 'en' } = await req.json();
+    const { messages, language = 'en', memories = [] } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Messages array is required');
@@ -91,7 +91,13 @@ serve(async (req) => {
       ? `\n\nIMPORTANT: The user prefers ${language} language. Respond in ${language} while maintaining medical accuracy.`
       : '';
 
-    const systemInstruction = HEALTH_SYSTEM_PROMPT + languageInstruction;
+    // Add user memories to context if available
+    let memoryContext = '';
+    if (memories && Array.isArray(memories) && memories.length > 0) {
+      memoryContext = `\n\nUSER MEMORY CONTEXT (Important information about the user):\n${memories.map((m: string) => `- ${m}`).join('\n')}\n\nUse this information to provide personalized, relevant health advice. Always consider the user's medical history, allergies, medications, and conditions when responding.`;
+    }
+
+    const systemInstruction = HEALTH_SYSTEM_PROMPT + languageInstruction + memoryContext;
 
     // Convert messages to Gemini format
     const contents = [];
