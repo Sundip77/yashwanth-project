@@ -56,10 +56,7 @@ export function ChatSidebar() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={toggleSidebar}
-                >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary/10 shrink-0">
                     <Activity className="h-5 w-5 text-primary" />
                   </div>
@@ -73,7 +70,7 @@ export function ChatSidebar() {
               </TooltipTrigger>
               {isCollapsed && (
                 <TooltipContent side="right">
-                  <p>MediShield - Click to expand</p>
+                  <p>MediShield AI</p>
                 </TooltipContent>
               )}
             </Tooltip>
@@ -86,6 +83,7 @@ export function ChatSidebar() {
                   size="icon"
                   className="h-7 w-7 shrink-0"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     toggleSidebar();
                   }}

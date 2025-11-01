@@ -76,18 +76,20 @@ export function ConversationList({ collapsed }: ConversationListProps) {
     setLoading(false);
   };
 
-  const deleteConversation = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
+  const deleteConversation = async (id: string) => {
     const { error } = await supabase
       .from('conversations')
       .delete()
       .eq('id', id);
 
     if (error) {
+      console.error('Delete error:', error);
       toast.error('Failed to delete conversation');
     } else {
       toast.success('Conversation deleted');
+      // Remove from local state immediately
+      setConversations(prev => prev.filter(conv => conv.id !== id));
+      // Also refresh from server
       fetchConversations();
     }
   };
@@ -134,7 +136,7 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 opacity-100 hover:bg-destructive/10"
+                    className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -147,7 +149,7 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                     <Trash2 className="h-4 w-4 text-destructive shrink-0" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -155,9 +157,15 @@ export function ConversationList({ collapsed }: ConversationListProps) {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                      Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={(e) => deleteConversation(conv.id, e)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        deleteConversation(conv.id);
+                      }}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       Delete

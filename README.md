@@ -24,7 +24,7 @@ MediShield AI is a Vite + React + TypeScript web app using shadcn-ui and Tailwin
 3. **Set up environment variables**
 
    Create a `.env.local` file in the project root:
-   ```sh
+```sh
    cp .env.example .env.local
    ```
 
@@ -43,8 +43,8 @@ MediShield AI is a Vite + React + TypeScript web app using shadcn-ui and Tailwin
 
 4. **Start the development server**
    ```sh
-   npm run dev
-   ```
+npm run dev
+```
 
 5. **Open your browser**
    - Visit `http://localhost:5173`
