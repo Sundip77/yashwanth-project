@@ -34,7 +34,11 @@ interface Memory {
   updated_at: string;
 }
 
-export function MemoryManager() {
+interface MemoryManagerProps {
+  collapsed?: boolean;
+}
+
+export function MemoryManager({ collapsed = false }: MemoryManagerProps = {}) {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -134,10 +138,16 @@ export function MemoryManager() {
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start gap-2" size="sm">
-            <Brain className="h-4 w-4" />
-            <span>Manage Memories</span>
-          </Button>
+          {collapsed ? (
+            <Button variant="ghost" size="icon" className="w-full">
+              <Brain className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button variant="outline" className="w-full justify-start gap-2" size="sm">
+              <Brain className="h-4 w-4" />
+              <span>Manage Memories</span>
+            </Button>
+          )}
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>

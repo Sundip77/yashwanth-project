@@ -44,7 +44,7 @@ export function ChatSidebar() {
   };
 
   const handleNewChat = () => {
-    navigate("/");
+    navigate("/chat");
   };
 
   return (
@@ -168,7 +168,7 @@ export function ChatSidebar() {
               <span>Memories</span>
             </SidebarGroupLabel>
             <SidebarGroupContent className="px-2">
-              <MemoryManager />
+              <MemoryManager collapsed={false} />
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -179,23 +179,21 @@ export function ChatSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
+                  <LanguageSelector collapsed={true} />
+                </SidebarMenuItem>
+                <SidebarMenuItem>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <SidebarMenuButton asChild>
-                          <Button variant="ghost" size="icon" className="w-full">
-                            <Languages className="h-4 w-4" />
-                          </Button>
-                        </SidebarMenuButton>
+                        <div className="w-full">
+                          <MemoryManager collapsed={true} />
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
-                        <p>Language</p>
+                        <p>Manage Memories</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <MemoryManager />
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -214,10 +212,10 @@ export function ChatSidebar() {
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     tooltip={isCollapsed ? "Toggle Theme" : undefined}
                   >
-                    {theme === "dark" ? (
-                      <Sun className="h-4 w-4 shrink-0" />
-                    ) : (
+                    {theme === "light" || !theme ? (
                       <Moon className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Sun className="h-4 w-4 shrink-0" />
                     )}
                     <span className={cn(isCollapsed && "sr-only")}>Toggle Theme</span>
                   </SidebarMenuButton>
